@@ -804,7 +804,7 @@ textarea::placeholder {
 
 @media (max-width: 480px) { /* For small Android phones */
    .hero {
-       padding-top: 80px; /* Adjust for smaller screens */
+       padding-top: 120px; /* Adjust for smaller screens */
    }
     .hero-title {
         font-size: 1.8rem; /* Make title smaller */
@@ -880,6 +880,9 @@ textarea::placeholder {
     .form-group textarea {
         padding: 0.8rem;
         font-size: 0.9rem;
+    }
+    .about-text p{
+        text-align: justify;
     }
 }
 
