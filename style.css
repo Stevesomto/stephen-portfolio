@@ -1,3 +1,14 @@
+
+:root {
+    --primary-color: #0A192F;
+    --secondary-color: #8892B0;
+    --background-color: #FFFFFF;
+    --text-color: #333333;
+    --accent-color: #64FFDA;
+    --hover-color: #764ba2;
+}
+
+
 /* Reset and Base Styles */
 * {
     margin: 0;
@@ -29,7 +40,7 @@ body {
     position: fixed;
     top: 0;
     width: 100%;
-    background: rgba(43, 5, 5, 0.95);
+    background: var(--primary-color);
     backdrop-filter: blur(10px);
     z-index: 1000;
     padding: 1rem 0;
@@ -61,7 +72,7 @@ body {
 
 .nav-logo a:hover{
     opacity: 0.8;
-    color: #e11d48;
+    color: var(--accent-color);
     transition: ease-in-out 0.3s;
 }
 
@@ -81,7 +92,7 @@ body {
 }
 
 .nav-link:hover {
-    color: #e11d48;
+    color: var(--accent-color);
 }
 
 .nav-link::after {
@@ -91,7 +102,7 @@ body {
     height: 2px;
     bottom: -5px;
     left: 0;
-    background-color: #e11d48;
+    background-color: var(--accent-color);
     transition: width 0.3s ease;
 }
 
@@ -170,11 +181,11 @@ body {
     margin-bottom: 1rem;
     opacity: 0.9;
     font-weight: bold;
-    color: #e11d48;
+    color: var(--secondary-color);
 }
 
 .hero-subtitle:hover {
-    color: #e11d48;
+    color: var(--accent-color);
     transition: color 0.3s ease;
 }
 
@@ -187,7 +198,7 @@ body {
 }
 
 .hero-description:hover {
-    color: #e11d48;
+    color: var(--accent-color);
     transition: color 0.3s ease;
 }
 
@@ -210,13 +221,13 @@ body {
 }
 
 .btn-primary {
-    background: linear-gradient(45deg, #ffd700, #ffed4e);
+    background: var(--accent-color);
     color: #333;
 }
 
 .btn-primary:hover {
     transform: translateY(-2px);
-    box-shadow: 0 10px 25px rgba(255, 215, 0, 0.3);
+    box-shadow: 0 10px 25px rgba(13, 186, 192, 0.3);
 }
 
 .btn-secondary {
@@ -244,7 +255,7 @@ body {
     display: block;
     font-size: 2rem;
     font-weight: 700;
-    color: #ffd700;
+    color: var(--accent-color);
 }
 
 .stat-label {
@@ -264,7 +275,7 @@ body {
     height: 400px;
     border-radius: 50%;
     object-fit: cover;
-    border: 8px solid rgba(255, 255, 255, 0.2);
+    border: 8px solid var(--primary-color);
     box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
     animation: float 6s ease-in-out infinite;
 }
@@ -709,7 +720,7 @@ textarea::placeholder {
         left: -100%;
         top: 70px; /* Adjust based on navbar height */
         flex-direction: column;
-        background-color: #1b0101;
+        background-color: var(--primary-color);
         width: 100%;
         text-align: center;
         transition: 0.3s;
