@@ -55,7 +55,7 @@ const observer = new IntersectionObserver((entries) => {
 
 
 // --- Typing/Deleting Effect for Roles ---
-const roles = ["Frontend Web Developer", "Graphic Designer", "Microsoft Office Specialist", "Web Designer"];
+const roles = ["Full-Stack Web Developer", "Graphic Designer", "Microsoft Office Specialist", "Web Designer"];
 let roleIndex = 0;
 let charIndex = 0;
 let isDeleting = false;
@@ -397,3 +397,21 @@ scrollToTopBtn.addEventListener('mouseleave', () => {
     scrollToTopBtn.style.transform = 'translateY(0)';
     scrollToTopBtn.style.boxShadow = '0 4px 20px rgba(102, 126, 234, 0.3)';
 });
+
+
+// This makes messages from the contact submit button comes to Whatsapp directly, instead of showing a notification. The form action in index.html is also updated to reflect this change.
+  function sendToWhatsApp(e) {
+    e.preventDefault();
+
+    const name = document.querySelector('input[placeholder="Your Name"]').value;
+    const email = document.querySelector('input[placeholder="Your Email"]').value;
+    const tel = document.querySelector('input[placeholder="Your Phone Number"]').value;
+    const subject = document.querySelector('input[placeholder="Subject"]').value;
+    const message = document.querySelector('textarea[placeholder="Your Message"]').value;
+
+
+    const text = `Hello Stephen!%0A%0A I am, ${name}%0A with email address (${email}) and phone number (${tel}) *Subject:* ${subject}%0A%0A*Message:*%0A${message}`;
+
+    window.open(`https://wa.me/2348123443047?text=${text}`, '_blank');
+  }
+
