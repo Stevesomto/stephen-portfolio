@@ -55,7 +55,7 @@ const observer = new IntersectionObserver((entries) => {
 
 
 // --- Typing/Deleting Effect for Roles ---
-const roles = ["Frontend Web Developer", "Graphic Designer", "Microsoft Office Specialist", "Web Designer"];
+const roles = ["Full-Stack Web Developer", "Web Designer", "Graphic Designer", "Microsoft Office Specialist"];
 let roleIndex = 0;
 let charIndex = 0;
 let isDeleting = false;
