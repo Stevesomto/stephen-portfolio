@@ -1,70 +1,195 @@
-// Mobile Navigation Toggle
-const hamburger = document.querySelector('.hamburger');
-const navMenu = document.querySelector('.nav-menu');
+const menuToggle = document.querySelector('.menu-toggle');
+const siteNav = document.querySelector('.nav-menu');
+const siteHeader = document.querySelector('.site-header');
+const yearEl = document.getElementById('year');
+const scrollToTopBtn = document.querySelector('.scroll-to-top');
 
-hamburger.addEventListener('click', () => {
-    hamburger.classList.toggle('active');
-    navMenu.classList.toggle('active');
-});
+if (yearEl) {
+    yearEl.textContent = String(new Date().getFullYear());
+}
 
-// Close mobile menu when clicking on a link
-document.querySelectorAll('.nav-link').forEach(n => n.addEventListener('click', () => {
-    hamburger.classList.remove('active');
-    navMenu.classList.remove('active');
-}));
+function closeMobileNav() {
+    if (!siteNav || !menuToggle) return;
+    siteNav.classList.remove('is-open', 'active');
+    menuToggle.classList.remove('active');
+    menuToggle.setAttribute('aria-expanded', 'false');
+    menuToggle.setAttribute('aria-label', 'Open menu');
+}
 
-// Navbar background change on scroll
-window.addEventListener('scroll', () => {
-    const navbar = document.querySelector('.navbar');
-    if (window.scrollY > 100) {
-        navbar.style.background = 'rgba(43, 5, 5, 0.98)'; // Darker, less transparent
-        navbar.style.boxShadow = '0 2px 20px rgba(0, 0, 0, 0.3)';
-    } else {
-        navbar.style.background = 'rgba(43, 5, 5, 0.95)'; // Original color
-        navbar.style.boxShadow = 'none';
-    }
-});
+function openMobileNav() {
+    if (!siteNav || !menuToggle) return;
+    siteNav.classList.add('is-open', 'active');
+    menuToggle.classList.add('active');
+    menuToggle.setAttribute('aria-expanded', 'true');
+    menuToggle.setAttribute('aria-label', 'Close menu');
+}
 
-// Smooth scrolling for anchor links
-document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-    anchor.addEventListener('click', function (e) {
-        e.preventDefault();
-        const target = document.querySelector(this.getAttribute('href'));
-        if (target) {
-            target.scrollIntoView({
-                behavior: 'smooth',
-                block: 'start'
+if (menuToggle && siteNav) {
+    menuToggle.addEventListener('click', () => {
+        const isOpen = siteNav.classList.contains('is-open');
+        if (isOpen) closeMobileNav();
+        else openMobileNav();
+    });
+
+    document.querySelectorAll('.nav-link, .nav-cta-mobile a').forEach((link) => {
+        link.addEventListener('click', closeMobileNav);
+    });
+
+    document.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape') closeMobileNav();
+    });
+}
+
+function initActiveNav() {
+    const sections = document.querySelectorAll('[data-section]');
+    const navLinks = document.querySelectorAll('.nav-link[data-nav]');
+    if (!sections.length || !navLinks.length) return;
+
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach((entry) => {
+            if (!entry.isIntersecting) return;
+            const id = entry.target.getAttribute('data-section');
+            navLinks.forEach((link) => {
+                link.classList.toggle('is-active', link.dataset.nav === id);
             });
-        }
+        });
+    }, { rootMargin: '-45% 0px -45% 0px', threshold: 0 });
+
+    sections.forEach((section) => observer.observe(section));
+}
+
+window.addEventListener('scroll', () => {
+    if (siteHeader) {
+        siteHeader.classList.toggle('is-scrolled', window.scrollY > 18);
+    }
+
+    if (scrollToTopBtn) {
+        scrollToTopBtn.classList.toggle('is-visible', window.scrollY > 420);
+    }
+}, { passive: true });
+
+document.querySelectorAll('a[href^="#"]').forEach((anchor) => {
+    anchor.addEventListener('click', function (event) {
+        const href = this.getAttribute('href');
+        if (!href || href === '#') return;
+        const target = document.querySelector(href);
+        if (!target) return;
+        event.preventDefault();
+        target.scrollIntoView({ behavior: 'smooth', block: 'start' });
     });
 });
 
-// Intersection Observer for animations
-const observerOptions = {
-    threshold: 0.1,
-    rootMargin: '0px 0px -50px 0px'
-};
-
-const observer = new IntersectionObserver((entries) => {
-    entries.forEach(entry => {
-        if (entry.isIntersecting) {
-            entry.target.classList.add('fade-in-up');
-        }
+const revealObserver = new IntersectionObserver((entries) => {
+    entries.forEach((entry) => {
+        if (!entry.isIntersecting) return;
+        entry.target.classList.add('reveal-visible');
+        revealObserver.unobserve(entry.target);
     });
-}, observerOptions);
+}, {
+    threshold: 0.08,
+    rootMargin: '0px 0px -8% 0px'
+});
 
+function initScrollReveal() {
+    document.querySelectorAll('.reveal').forEach((el) => {
+        const parentGrid = el.closest('.skills-matrix, .projects-grid, .projects-featured, .services-list, .trust-grid');
+        if (parentGrid && !el.style.transitionDelay) {
+            const siblings = [...parentGrid.querySelectorAll('.reveal')];
+            const index = siblings.indexOf(el);
+            el.style.transitionDelay = `${Math.min(index * 0.06, 0.4)}s`;
+        }
+        revealObserver.observe(el);
+    });
+}
 
-// --- Typing/Deleting Effect for Roles ---
-const roles = ["Full-Stack Web Developer", "Web Designer", "Graphic Designer", "Microsoft Office Specialist"];
+function loadProjectPreview(previewEl) {
+    if (previewEl.dataset.loaded === 'true') return;
+    previewEl.dataset.loaded = 'true';
+
+    const imageSrc = previewEl.dataset.image;
+    if (imageSrc) {
+        const img = document.createElement('img');
+        img.src = imageSrc;
+        img.alt = 'Project preview';
+        img.loading = 'lazy';
+        img.onload = () => previewEl.classList.add('is-loaded');
+        previewEl.appendChild(img);
+        return;
+    }
+
+    const src = previewEl.dataset.src;
+    if (!src) return;
+
+    const iframe = document.createElement('iframe');
+    iframe.src = src;
+    iframe.title = 'Project live preview';
+    iframe.loading = 'lazy';
+    iframe.setAttribute('sandbox', 'allow-scripts allow-same-origin allow-popups allow-forms');
+    iframe.onload = () => previewEl.classList.add('is-loaded');
+    setTimeout(() => previewEl.classList.add('is-loaded'), 2500);
+    previewEl.appendChild(iframe);
+}
+
+const previewObserver = new IntersectionObserver((entries) => {
+    entries.forEach((entry) => {
+        if (!entry.isIntersecting) return;
+        loadProjectPreview(entry.target);
+        previewObserver.unobserve(entry.target);
+    });
+}, { rootMargin: '140px 0px', threshold: 0.01 });
+
+function initLazyPreviews() {
+    document.querySelectorAll('.project-preview').forEach((el) => previewObserver.observe(el));
+}
+
+function initProjectFilters() {
+    const buttons = document.querySelectorAll('.filter-btn');
+    const cards = document.querySelectorAll('.project-card[data-category]');
+    if (!buttons.length || !cards.length) return;
+
+    buttons.forEach((button) => {
+        button.addEventListener('click', () => {
+            const filter = button.dataset.filter || 'all';
+
+            buttons.forEach((btn) => {
+                const active = btn === button;
+                btn.classList.toggle('is-active', active);
+                btn.setAttribute('aria-selected', active ? 'true' : 'false');
+            });
+
+            cards.forEach((card) => {
+                const category = card.dataset.category;
+                const show = filter === 'all' || category === filter;
+                card.classList.toggle('is-hidden', !show);
+            });
+        });
+    });
+}
+
+function initPreloader() {
+    const preloader = document.getElementById('preloader');
+    if (!preloader) return;
+
+    const finish = () => {
+        preloader.classList.add('preloader-done');
+        document.body.classList.remove('preloader-active');
+        setTimeout(() => preloader.remove(), 550);
+    };
+
+    const kickoff = () => setTimeout(finish, 420);
+
+    if (document.readyState === 'complete') kickoff();
+    else window.addEventListener('load', kickoff, { once: true });
+}
+
+const roles = [
+    'Full-Stack Web Developer',
+    'Python & Django Builder',
+    'Web Designer & Freelancer'
+];
 let roleIndex = 0;
 let charIndex = 0;
 let isDeleting = false;
-const typingSpeed = 100; // milliseconds per character
-const deletingSpeed = 50; // milliseconds per character
-const pauseBeforeDelete = 1500; // milliseconds to pause after typing
-const pauseBeforeType = 500; // milliseconds to pause after deleting
-const staticPrefix = "I am a "; // The new static prefix
-const staticSuffix = "."; // No suffix needed
 
 function typeRoles() {
     const roleTextElement = document.getElementById('role-text');
@@ -73,345 +198,160 @@ function typeRoles() {
     const currentRole = roles[roleIndex];
 
     if (isDeleting) {
-        // Delete characters, keeping the static prefix
-        roleTextElement.textContent = staticPrefix + currentRole.substring(0, charIndex - 1);
-        charIndex--;
+        roleTextElement.textContent = currentRole.substring(0, charIndex - 1);
+        charIndex -= 1;
     } else {
-        // Type characters, appending to the static prefix
-        roleTextElement.textContent = staticPrefix + currentRole.substring(0, charIndex + 1);
-        charIndex++;
+        roleTextElement.textContent = currentRole.substring(0, charIndex + 1);
+        charIndex += 1;
     }
 
-    let currentSpeed = isDeleting ? deletingSpeed : typingSpeed;
+    let currentSpeed = isDeleting ? 42 : 88;
 
     if (!isDeleting && charIndex === currentRole.length) {
-        currentSpeed = pauseBeforeDelete;
+        currentSpeed = 1600;
         isDeleting = true;
     } else if (isDeleting && charIndex === 0) {
         isDeleting = false;
         roleIndex = (roleIndex + 1) % roles.length;
-        currentSpeed = pauseBeforeType;
+        currentSpeed = 420;
     }
 
     setTimeout(typeRoles, currentSpeed);
 }
-// --- END NEW ---
 
-
-// Call this function when the DOM is fully loaded, instead of the previous hero-title typing.
-document.addEventListener('DOMContentLoaded', () => {
-    // Observe elements for animation
-    const animateElements = document.querySelectorAll('.about-content, .skills-section, .projects-section, .contact-content');
-    animateElements.forEach(el => {
-        observer.observe(el);
-    });
-
-    // Start the role typing effect for the hero-subtitle
-    typeRoles();
-});
-
-// Parallax effect for hero section
-window.addEventListener('scroll', () => {
-    const scrolled = window.pageYOffset;
-    const hero = document.querySelector('.hero');
-    if (hero) {
-        const rate = scrolled * -0.3;
-        hero.style.transform = `translateY(${rate}px)`;
-    }
-});
-
-// Portfolio item click handlers
-document.querySelectorAll('.project-item').forEach(item => {
-    item.addEventListener('click', () => {
-        const title = item.querySelector('.project-title').textContent;
-        showNotification(`Opening ${title} project details...`, 'info');
-    });
-});
-
-// Add loading animation to buttons
-document.querySelectorAll('.btn').forEach(btn => {
-    btn.addEventListener('click', function(e) {
-        if (this.classList.contains('btn-primary') && !this.disabled && !this.hasAttribute('download')) {
-            const originalText = this.textContent;
-            this.textContent = 'Loading...';
-            this.disabled = true;
-
-            setTimeout(() => {
-                this.textContent = originalText;
-                this.disabled = false;
-            }, 2000);
-        }
-    });
-});
-
-// Counter animation for stats
 function animateCounters() {
-    const counters = document.querySelectorAll('.stat-number');
-    counters.forEach(counter => {
-        const targetText = counter.textContent.replace('+', '');
-        const target = parseInt(targetText);
-        const increment = target / 100;
-        let current = 0;
+    const counters = document.querySelectorAll('.stat-number[data-count]');
+    counters.forEach((counter) => {
+        const original = counter.textContent.trim();
+        const hasPlus = original.includes('+');
+        const target = Number(counter.dataset.count);
+        if (!Number.isFinite(target)) return;
+
+        const steps = 48;
+        let frame = 0;
 
         const updateCounter = () => {
-            if (current < target) {
-                current += increment;
-                counter.textContent = Math.ceil(current) + '+';
-                setTimeout(updateCounter, 20);
-            } else {
-                counter.textContent = target + '+';
-            }
+            frame += 1;
+            const value = Math.round((target * frame) / steps);
+            counter.textContent = hasPlus ? `${value}+` : String(value);
+            if (frame < steps) requestAnimationFrame(updateCounter);
+            else counter.textContent = original;
         };
 
-        updateCounter();
+        requestAnimationFrame(updateCounter);
     });
 }
 
-// Trigger counter animation when hero section is visible
-const heroSection = document.querySelector('#home');
-if (heroSection) {
-    const heroObserver = new IntersectionObserver((entries) => {
-        entries.forEach(entry => {
-            if (entry.isIntersecting) {
-                setTimeout(animateCounters, 1000);
-                heroObserver.unobserve(entry.target);
-            }
+function initTrustCounters() {
+    const trustStrip = document.querySelector('.trust-strip');
+    if (!trustStrip) return;
+
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach((entry) => {
+            if (!entry.isIntersecting) return;
+            animateCounters();
+            observer.unobserve(entry.target);
         });
-    }, { threshold: 0.5 });
+    }, { threshold: 0.4 });
 
-    heroObserver.observe(heroSection);
+    observer.observe(trustStrip);
 }
 
-// Form submission handling
-const contactForm = document.querySelector('.contact-form form');
-if (contactForm) {
-    contactForm.addEventListener('submit', function(e) {
-        e.preventDefault();
-
-        const name = this.querySelector('input[type="text"][autocomplete="name"]').value;
-        const email = this.querySelector('input[type="email"]').value;
-        const subject = this.querySelector('input[placeholder="Subject"]').value;
-        const message = this.querySelector('textarea').value;
-
-        if (!name || !email || !subject || !message) {
-            showNotification('Please fill in all fields', 'error');
-            return;
-        }
-
-        if (!isValidEmail(email)) {
-            showNotification('Please enter a valid email address', 'error');
-            return;
-        }
-
-        const submitBtn = this.querySelector('button[type="submit"]');
-        const originalText = submitBtn.textContent;
-        submitBtn.textContent = 'Sending...';
-        submitBtn.disabled = true;
-
-        setTimeout(() => {
-            showNotification('Message sent successfully! I\'ll get back to you soon.', 'success');
-            this.reset();
-            submitBtn.textContent = originalText;
-            submitBtn.disabled = false;
-        }, 2000);
-    });
-}
-
-// Email validation function
-function isValidEmail(email) {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return emailRegex.test(email);
-}
-
-// Notification system
 function showNotification(message, type = 'info') {
-    const existingNotification = document.querySelector('.notification');
-    if (existingNotification) {
-        existingNotification.remove();
-    }
+    document.querySelector('.notification')?.remove();
 
     const notification = document.createElement('div');
     notification.className = `notification notification-${type}`;
     notification.innerHTML = `
         <div class="notification-content">
             <span class="notification-message">${message}</span>
-            <button class="notification-close">&times;</button>
+            <button type="button" class="notification-close" aria-label="Close notification">&times;</button>
         </div>
     `;
 
-    notification.style.cssText = `
-        position: fixed;
-        top: 20px;
-        right: 20px;
-        background: ${type === 'success' ? '#4CAF50' : type === 'error' ? '#f44336' : '#2196F3'};
-        color: white;
-        padding: 1rem 1.5rem;
-        border-radius: 10px;
-        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
-        z-index: 10000;
-        transform: translateX(100%);
-        transition: transform 0.3s ease;
-        max-width: 400px;
-    `;
-
     document.body.appendChild(notification);
+    requestAnimationFrame(() => notification.classList.add('is-shown'));
 
-    setTimeout(() => {
-        notification.style.transform = 'translateX(0)';
-    }, 100);
+    const hide = () => {
+        notification.classList.remove('is-shown');
+        setTimeout(() => notification.remove(), 280);
+    };
 
-    const closeBtn = notification.querySelector('.notification-close');
-    closeBtn.addEventListener('click', () => {
-        notification.style.transform = 'translateX(100%)';
-        setTimeout(() => notification.remove(), 300);
+    notification.querySelector('.notification-close')?.addEventListener('click', hide);
+    setTimeout(hide, 4800);
+}
+
+function sendToWhatsApp(event) {
+    event.preventDefault();
+
+    const name = document.getElementById('name')?.value.trim();
+    const email = document.getElementById('email')?.value.trim();
+    const tel = document.getElementById('phone')?.value.trim();
+    const subject = document.getElementById('subject')?.value.trim();
+    const message = document.getElementById('message')?.value.trim();
+
+    if (!name || !email || !tel || !subject || !message) {
+        showNotification('Please fill in all fields', 'error');
+        return;
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+        showNotification('Please enter a valid email address', 'error');
+        return;
+    }
+
+    const text = `Hello Stephen!\n\nI am ${name}\nEmail: ${email}\nPhone: ${tel}\n*Subject:* ${subject}\n\n*Message:*\n${message}`;
+    window.open(`https://wa.me/2348123443047?text=${encodeURIComponent(text)}`, '_blank', 'noopener,noreferrer');
+    showNotification('Opening WhatsApp…', 'success');
+}
+
+function initContactForm() {
+    const form = document.getElementById('contact-form');
+    if (!form) return;
+    form.addEventListener('submit', sendToWhatsApp);
+}
+
+if (scrollToTopBtn) {
+    scrollToTopBtn.addEventListener('click', () => {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
     });
+}
 
-    setTimeout(() => {
-        if (notification.parentNode) {
-            notification.style.transform = 'translateX(100%)';
-            setTimeout(() => notification.remove(), 300);
+function initThemeToggle() {
+    const toggle = document.getElementById('theme-toggle');
+    const meta = document.getElementById('theme-color-meta');
+    if (!toggle) return;
+
+    const syncToggle = (theme) => {
+        const isDark = theme === 'dark';
+        toggle.setAttribute('aria-label', isDark ? 'Switch to light mode' : 'Switch to dark mode');
+        toggle.setAttribute('aria-pressed', isDark ? 'true' : 'false');
+        if (meta) meta.setAttribute('content', isDark ? '#101412' : '#eef1ef');
+    };
+
+    syncToggle(document.documentElement.getAttribute('data-theme') || 'light');
+
+    toggle.addEventListener('click', () => {
+        const next = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+        document.documentElement.setAttribute('data-theme', next);
+        try {
+            localStorage.setItem('ss-theme', next);
+        } catch (error) {
+            /* ignore storage errors */
         }
-    }, 5000);
-}
-
-// Skill bars animation
-function animateSkillBars() {
-    const skillBars = document.querySelectorAll('.skill-progress');
-    skillBars.forEach(bar => {
-        const width = bar.style.width;
-        bar.style.width = '0%';
-        setTimeout(() => {
-            bar.style.width = width;
-        }, 500);
+        syncToggle(next);
     });
 }
 
-// Trigger skill bar animation when about section is visible
-const aboutSection = document.querySelector('#about');
-if (aboutSection) {
-    const aboutObserver = new IntersectionObserver((entries) => {
-        entries.forEach(entry => {
-            if (entry.isIntersecting) {
-                animateSkillBars();
-                aboutObserver.unobserve(entry.target);
-            }
-        });
-    }, { threshold: 0.5 });
-
-    aboutObserver.observe(aboutSection);
-}
-
-// Add CSS for notification styles
-const notificationStyles = document.createElement('style');
-notificationStyles.textContent = `
-    .notification-content {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 1rem;
-    }
-
-    .notification-close {
-        background: none;
-        border: none;
-        color: white;
-        font-size: 1.5rem;
-        cursor: pointer;
-        padding: 0;
-        line-height: 1;
-    }
-
-    .notification-close:hover {
-        opacity: 0.8;
-    }
-
-    .notification-message {
-        flex: 1;
-    }
-`;
-document.head.appendChild(notificationStyles);
-
-// Preload images for better performance
-function preloadImages() {
-    const images = [
-        'images/STEPHEN SOMTOCHUKWU.jpg',
-        'images/STEPHEN_PIC.jpg',
-    ];
-    images.forEach(src => {
-        const img = new Image();
-        img.src = src;
-    });
-}
-preloadImages();
-
-// Add scroll to top functionality
-const scrollToTopBtn = document.createElement('button');
-scrollToTopBtn.innerHTML = '↑';
-scrollToTopBtn.className = 'scroll-to-top';
-scrollToTopBtn.style.cssText = `
-    position: fixed;
-    bottom: 30px;
-    right: 30px;
-    width: 50px;
-    height: 50px;
-    background: linear-gradient(45deg, #667eea, #764ba2);
-    color: white;
-    border: none;
-    border-radius: 50%;
-    font-size: 1.5rem;
-    cursor: pointer;
-    opacity: 0;
-    visibility: hidden;
-    transition: all 0.3s ease;
-    z-index: 1000;
-    box-shadow: 0 4px 20px rgba(102, 126, 234, 0.3);
-`;
-document.body.appendChild(scrollToTopBtn);
-
-// Show/hide scroll to top button
-window.addEventListener('scroll', () => {
-    if (window.pageYOffset > 300) {
-        scrollToTopBtn.style.opacity = '1';
-        scrollToTopBtn.style.visibility = 'visible';
-    } else {
-        scrollToTopBtn.style.opacity = '0';
-        scrollToTopBtn.style.visibility = 'hidden';
-    }
+document.addEventListener('DOMContentLoaded', () => {
+    initThemeToggle();
+    initPreloader();
+    initScrollReveal();
+    initLazyPreviews();
+    initActiveNav();
+    initProjectFilters();
+    initTrustCounters();
+    initContactForm();
+    typeRoles();
 });
-
-// Scroll to top functionality
-scrollToTopBtn.addEventListener('click', () => {
-    window.scrollTo({
-        top: 0,
-        behavior: 'smooth'
-    });
-});
-
-// Add hover effect to scroll to top button
-scrollToTopBtn.addEventListener('mouseenter', () => {
-    scrollToTopBtn.style.transform = 'translateY(-3px)';
-    scrollToTopBtn.style.boxShadow = '0 6px 25px rgba(102, 126, 234, 0.4)';
-});
-
-scrollToTopBtn.addEventListener('mouseleave', () => {
-    scrollToTopBtn.style.transform = 'translateY(0)';
-    scrollToTopBtn.style.boxShadow = '0 4px 20px rgba(102, 126, 234, 0.3)';
-});
-
-
-// This makes messages from the contact submit button comes to Whatsapp directly, instead of showing a notification. The form action in index.html is also updated to reflect this change.
-  function sendToWhatsApp(e) {
-    e.preventDefault();
-
-    const name = document.querySelector('input[placeholder="Your Name"]').value;
-    const email = document.querySelector('input[placeholder="Your Email"]').value;
-    const tel = document.querySelector('input[placeholder="Your Phone Number"]').value;
-    const subject = document.querySelector('input[placeholder="Subject"]').value;
-    const message = document.querySelector('textarea[placeholder="Your Message"]').value;
-
-
-    const text = `Hello Stephen!%0A%0A I am, ${name}%0A with email address (${email}) and phone number (${tel}) *Subject:* ${subject}%0A%0A*Message:*%0A${message}`;
-
-    window.open(`https://wa.me/2348123443047?text=${text}`, '_blank');
-  }
-
